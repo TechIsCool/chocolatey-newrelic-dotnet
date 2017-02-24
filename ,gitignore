@@ -4,3 +4,4 @@
 *.nupkg
 .DS_Store
 binaries/
+output/

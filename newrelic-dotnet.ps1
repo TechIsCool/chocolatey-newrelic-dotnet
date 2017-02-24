@@ -68,3 +68,5 @@ $(Get-Content -Path "$PSScriptRoot\templates\chocolateyUninstall.ps1") `
   -replace '##PRODUCTCODEx64##', $LocalProductCode_x64 | `
   Out-File "$PSScriptRoot\output\tools\chocolateyUninstall.ps1"
 Write-Output 'Created output\tools\chocolateyUninstall.ps1'
+
+Set-Item -Path ENV:NUPKG -Value "newrelic-dotnet.$Version.nupkg"

@@ -1,5 +1,9 @@
 version: 1.0.{build}
 
+environment:
+  TOKEN:
+    secure: hIJKQ1Spg7Z+jgBznNcdpXtxyTRWBAFQGAukgMK7rtPQQtNTLXJNKFbKnZH8g33A
+
 platform:
   - x64
   
@@ -14,5 +18,11 @@ test_script:
   - ps: cinst newrelic-dotnet -fdvy --x86 -source "$pwd;http://chocolatey.org/api/v2/"
   - ps: cuninst -fdvy newrelic-dotnet 
 
+deploy_script:
+  - ps: >-
+        choco apiKey -k $env:TOKEN -source https://chocolatey.org/;
+        Write-Output $env:NUPKG;
+        # choco push $env:NUPKG
+      }
 artifacts:
   - path: '**\*.nupkg'
