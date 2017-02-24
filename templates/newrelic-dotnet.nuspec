@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>newrelic-dotnet</id>
+    <version>##VERSION##</version>
+    <title>New Relic .NET Agent</title>
+    <authors>NewRelic</authors>
+    <owners>TechIsCool,rosudrag,kireevco</owners>
+    <licenseUrl>https://www.newrelic.com</licenseUrl>
+    <projectUrl>https://www.newrelic.com</projectUrl>
+    <iconUrl>http://newrelic.com/assets/newrelic/source/NewRelic-logo-square.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>New Relic .NET Agent that allows you to monitor your .NET application. Package has following parameters:
+
+    -param 'license_key=newrelic_key' # Specify Your NewRelic license key
+    -param 'restartiis=true' # (Optional) Stop IIS service, install package, start IIS after.
+    -param 'license_key=your_key;restartiis=true' # Specify License key and handle IIS restarts.
+    </description>
+    <summary>New Relic .NET Agent</summary>
+    <releaseNotes>##RELEASENOTES##</releaseNotes>
+    <copyright>https://www.newrelic.com</copyright>
+    <tags>newrelic-dotnet NewRelic dotnet .Net</tags>
+  </metadata>
+</package>

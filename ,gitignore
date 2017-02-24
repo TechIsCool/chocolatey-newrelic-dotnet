@@ -1,0 +1,6 @@
+*.cache
+*~
+
+*.nupkg
+.DS_Store
+binaries/
