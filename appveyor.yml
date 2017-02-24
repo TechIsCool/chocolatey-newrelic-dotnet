@@ -21,7 +21,6 @@ test_script:
 deploy_script:
   - ps: >-
         choco apiKey -k $env:TOKEN -source https://chocolatey.org/;
-        Write-Output $env:NUPKG;
-        # choco push $env:NUPKG
+        choco push $env:NUPKG
 artifacts:
   - path: '**\*.nupkg'
