@@ -5,7 +5,7 @@ platform:
   
 build_script:
   - ps: >-
-      ./newrelic-dotnet.ps1
+      ./newrelic-dotnet.ps1;
       choco pack newrelic-dotnet.nuspec
 
 artifacts:
