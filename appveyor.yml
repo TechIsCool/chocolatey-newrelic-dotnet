@@ -6,7 +6,13 @@ platform:
 build_script:
   - ps: >-
       ./newrelic-dotnet.ps1;
-      choco pack newrelic-dotnet.nuspec
+      choco pack output/newrelic-dotnet.nuspec
+
+test_script:
+  - ps: cinst newrelic-dotnet -fdvy -source "$pwd;http://chocolatey.org/api/v2/"
+  - ps: cuninst -fdvy newrelic-dotnet
+  - ps: cinst newrelic-dotnet -fdvy --x86 -source "$pwd;http://chocolatey.org/api/v2/"
+  - ps: cuninst -fdvy newrelic-dotnet 
 
 artifacts:
   - path: '**\*.nupkg'
