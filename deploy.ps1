@@ -7,5 +7,5 @@ if( $env:NUPKG -ne $published_nupkg ){
   choco push $env:NUPKG
 }
 else {
-  Write-Output "Published Version ($published_nupkg) already equals Build Version ($local_nupkg)'
+  Write-Output "Published Version ($published_nupkg) already equals Build Version ($local_nupkg)"
 }
