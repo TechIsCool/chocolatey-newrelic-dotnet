@@ -31,16 +31,16 @@ Write-Output "Downloaded x64"
 Write-Output "  x64 URL: $URL_x64"
 
 
-Write-Output "Creating SHA1"
-$LocalSHA1_x64 = Get-FileHash `
+Write-Output "Creating SHA256"
+$LocalSHA256_x64 = Get-FileHash `
   -Path $LocalFile_x64 `
-  -Algorithm SHA1
-Write-Output "  x64 SHA: $($LocalSHA1_x64.Hash)"
+  -Algorithm SHA256
+Write-Output "  x64 SHA256: $($LocalSHA256_x64.Hash)"
 
-$LocalSHA1_x86 = Get-FileHash `
+$LocalSHA256_x86 = Get-FileHash `
   -Path $LocalFile_x86 `
-  -Algorithm SHA1
-Write-Output "  x86 SHA: $($LocalSHA1_x86.Hash)"
+  -Algorithm SHA256
+Write-Output "  x86 SHA256: $($LocalSHA256_x86.Hash)"
 
 Write-Output "Getting MSI ProductCode"
 $LocalProductCode_x64 = $(.\Get-MSIFileInformation.ps1 -Path $LocalFile_x64 -Property ProductCode)[3]
@@ -59,7 +59,9 @@ Write-Output 'Created output\newrelic-dotnet.nuspec'
 
 $(Get-Content -Path "$PSScriptRoot\templates\chocolateyInstall.ps1") `
   -replace '##URLx86##', $URL_x86 `
-  -replace '##URLx64##', $URL_x64 | `
+  -replace '##URLx64##', $URL_x64 `
+  -replace '##SHA256x86##', $LocalSHA256_x86.Hash `
+  -replace '##SHA256x64##', $LocalSHA256_x64.Hash | `
   Out-File "$PSScriptRoot\output\tools\chocolateyInstall.ps1"
 Write-Output 'Created output\tools\chocolateyInstall.ps1'
 

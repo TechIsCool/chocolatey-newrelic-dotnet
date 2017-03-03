@@ -20,7 +20,6 @@ test_script:
 
 deploy_script:
   - ps: >-
-        choco apiKey -k $env:TOKEN -source https://chocolatey.org/;
-        choco push $env:NUPKG
+      ./deploy.ps1;
 artifacts:
   - path: '**\*.nupkg'

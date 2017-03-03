@@ -1,18 +1,18 @@
-﻿#NOTE: Please remove any commented lines to tidy up prior to releasing the package, including this one
+﻿$package = 'newrelic-dotnet'
 
-$packageName = 'newrelic-dotnet' # arbitrary name for the package, used in messages
-$installerType = 'msi' #only one of these: exe, msi, msu
-$url = '##URLx86##' # download url
-$url64 = '##URLx64##' # 64bit URL here or remove - if installer decides, then use $url
-$silentArgs = '/qb INSTALLLEVEL=50' # "/s /S /q /Q /quiet /silent /SILENT /VERYSILENT" # try any of these to get the silent installer #msi is always /quiet
-$validExitCodes = @(0) #please insert other valid exit codes here, exit codes for ms http://msdn.microsoft.com/en-us/library/aa368542(VS.85).aspx
-
-# Defaults
+$choco_params = @{
+  PackageName = $package;
+  FileType       = 'msi';
+  SilentArgs     = '/qb INSTALLLEVEL=50'
+  Url            = '##URLx86##';
+  Url64bit       = '##URLx64##';
+  checksum       = '##SHA256x86##'
+  checksumType   = 'sha256'
+  checksum64     = '##SHA256x64##'
+  checksumType64 = 'sha256'
+  ValidExitCodes = @(0)
+}
 $restartiis = $false
-
-
-
-
 
 if (![string]::IsNullOrEmpty($env:chocolateyPackageParameters))
 {
@@ -21,16 +21,14 @@ if (![string]::IsNullOrEmpty($env:chocolateyPackageParameters))
     # Getting Parameters
     $rawTxt =  [regex]::escape($env:chocolateyPackageParameters)
     $params = $($rawTxt -split ';' | ForEach-Object {
-       $temp= $_ -split '='
-       "{0}={1}" -f $temp[0].Substring(0,$temp[0].Length),$temp[1]
+      $temp= $_ -split '='
+      "{0}={1}" -f $temp[0].Substring(0,$temp[0].Length),$temp[1]
     } | ConvertFrom-StringData)
-
 
     if ($params.restartiis -eq 'true')
     {      
       Write-Host "Found 'restartiis' parameter enabled."
       $restartiis = $true
-      
     }
     else
     {
@@ -40,7 +38,7 @@ if (![string]::IsNullOrEmpty($env:chocolateyPackageParameters))
     if (![string]::IsNullOrEmpty($params.license_key))
     {        
       # Passing License key
-      $silentArgs = $silentArgs + " NR_LICENSE_KEY=" + $params.license_key      
+      $choco_params['SilentArgs'] = $choco_params['SilentArgs'] + " NR_LICENSE_KEY=" + $params.license_key      
     }
     else
     {
@@ -57,8 +55,6 @@ else
   Write-Warning "No New Relic license key specified. Please use -params 'license_key=<newrelic_key>' or alternatively specify it manually after installation."
 }
 
-
-
 try { #error handling is only necessary if you need to do anything in addition to/instead of the main helpers
   
   if ($restartiis)
@@ -69,28 +65,28 @@ try { #error handling is only necessary if you need to do anything in addition t
     if ($service -ne $null)
     {
       
-        Write-Host $($ServiceName+" service will be stopped")
+        Write-Host $($ServiceName + " service will be stopped")
 
         Stop-Service $ServiceName
          
-        echo "Sleeping for $sleep_timeout seconds"  
+        Write-Output "Sleeping for $sleep_timeout seconds"  
         
         $i = 0
         while (!(Get-Service $ServiceName | Where-Object {$_.status -eq "stopped"}))
         {  
           
-          echo "Waiting for ${ServiceName} to be stopped"    
+          Write-Output "Waiting for ${ServiceName} to be stopped"    
           if ($i -gt $sleep_timeout)
           {
             throw "Can't wait for ${ServiceName} to be stopped. Took longer than ${sleep_timeout}s: Timeout"
           }
-          Echo "[$i]"
+          Write-Output "[$i]"
           Start-Sleep -s 1
           $i++
         }
-        echo "${ServiceName} is stopped. Continue."
+        Write-Output "${ServiceName} is stopped. Continue."
         
-        Install-ChocolateyPackage "$packageName" "$installerType" "$silentArgs" "$url" "$url64"  -validExitCodes $validExitCodes
+        Install-ChocolateyPackage @choco_params
         
         Write-Host "Configuring $ServiceName to autostart"
         
@@ -101,14 +97,14 @@ try { #error handling is only necessary if you need to do anything in addition t
     }
     else
     {  
-      echo "No ${ServiceName} service found. Nothing to restart. Continue."
-      Install-ChocolateyPackage "$packageName" "$installerType" "$silentArgs" "$url" "$url64"  -validExitCodes $validExitCodes
+      Write-Output "No ${ServiceName} service found. Nothing to restart. Continue."
+      Install-ChocolateyPackage @choco_params
     }
   }
   else
   {  
     Write-Warning "IIS will not be restarted. Please do so manually. In order to stop & start IIS automatically use parameter: -params 'restartiis=true'. "    
-    Install-ChocolateyPackage "$packageName" "$installerType" "$silentArgs" "$url" "$url64"  -validExitCodes $validExitCodes
+    Install-ChocolateyPackage @choco_params
   }
   
 } catch {
