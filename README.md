@@ -12,3 +12,17 @@ This Package is a template that will automatically be upgraded when a new veriso
 
 ### Known Issues
 When a version is release by New Relic the old version is no longer functional.
+
+### Used Tech Stack
+[AppVeyor](https://ci.appveyor.com/project/TechIsCool/chocolatey-newrelic-dotnet) -
+Builds the Nuget Package
+
+[Chocolatey](https://chocolatey.org/packages/newrelic-dotnet) -
+Hosts the Nuget Package
+
+[GitHub](https://github.com/TechIsCool/chocolatey-newrelic-dotnet) -
+Provided Version Control
+
+[Zapier](https://zapier.com) - 
+Checks RSS Feed every 15 minutes and triggers automtic builds.
+
