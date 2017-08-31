@@ -1,11 +1,13 @@
 ﻿$package = 'newrelic-dotnet'
 
+$launch_path = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"
+
 $choco_params = @{
   PackageName = $package;
   FileType       = 'msi';
   SilentArgs     = '/qb INSTALLLEVEL=50'
-  Url            = '##URLx86##';
-  Url64bit       = '##URLx64##';
+  file           = "$launch_path\..\binaries\##FILEx86##";
+  file64         = "$launch_path\..\binaries\##FILEx64##";
   checksum       = '##SHA256x86##'
   checksumType   = 'sha256'
   checksum64     = '##SHA256x64##'

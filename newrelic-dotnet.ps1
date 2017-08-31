@@ -3,55 +3,66 @@
   URL = @{};
   LocalFile = @{};
   Hash = @{};
+  ProductCode = @{};
 }
-$Package    = 'newrelic-dotnet'
-$RSSfeed    = 'https://docs.newrelic.com/docs/release-notes/agent-release-notes/net-release-notes/feed'
-$PackageURL = 'https://download.newrelic.com/dot_net_agent/release/NewRelicAgent_$OS_$Version.msi'  
+$Package     = 'newrelic-dotnet'
+$RSSfeed     = 'https://docs.newrelic.com/docs/release-notes/agent-release-notes/net-release-notes/feed'
+$PackageName = 'NewRelicAgent_${OS}_${Version}.msi'
+$PackageURL  = "https://download.newrelic.com/dot_net_agent/release/$PackageName"
+ 
 
 Try{ 
-  [xml]$Value = $(Invoke-WebRequest -Uri $RSSfeed -ErrorAction Stop).Content 
+  [xml]$RSSResults = $(Invoke-WebRequest -Uri $RSSfeed -ErrorAction Stop).Content 
 }
 Catch [System.Exception]{ 
   $WebReqErr = $error[0] | Select-Object * | Format-List -Force 
   Write-Error "An error occurred while attempting to connect to the requested site.  The error was $WebReqErr.Exception" 
 }
 
-$Version = $Value.rss.channel.Item[0].title -replace '(.*\s)(\d.+)','$2'
-$ReleaseNotes = $Value.rss.channel.Item[0].link
+$Version = $RSSResults.rss.channel.Item[0].title -replace '(.*\s)(\d.+)','$2'
+$ReleaseNotes = $RSSResults.rss.channel.Item[0].link
 
-Write-Output "Release Notes: $ReleaseNotes"
-Write-Output "Release Version: $Version"
+Write-Output `
+  $Package `
+  "Release Version: $Version" `
+  "Release Notes: $ReleaseNotes"
 
 New-Item `
   -ItemType Directory `
-  -Path "$PSScriptRoot\binaries" `
+  -Path "$PSScriptRoot\output\binaries","$PSScriptRoot\output\tools\" `
   -ErrorAction SilentlyContinue | Out-Null
   
 foreach ($OS in 'x86','x64') {
-  $Params['URL'][$OS] = "https://download.newrelic.com/dot_net_agent/release/NewRelicAgent_$os_$Version.msi"
-  $Params['LocalFile'][$OS] = "$PSScriptRoot\binaries\$OS_$Version.msi"
-  Write-Output $Params['URL'][$OS]
+  $Params['URL'][$OS] = $ExecutionContext.InvokeCommand.ExpandString($PackageURL)
+  $Params['LocalFile'][$OS] = "$PSScriptRoot\output\binaries\$($ExecutionContext.InvokeCommand.ExpandString($PackageName))"
+  
   Invoke-WebRequest `
    -Uri $Params['URL'][$OS] `
    -OutFile $Params['LocalFile'][$OS]
-  Write-Output "Downloaded $OS"
-  Write-Output "  $OS URL: $($URL[$OS])"
+  Write-Output "Downloaded $OS from $($Params['URL'][$OS])"
    
-  Write-Output "Creating $($Params['Algorithm'])"
   $Params['Hash'][$OS] = Get-FileHash `
     -Path $Params['LocalFile'][$OS] `
     -Algorithm $Params['Algorithm']
-  Write-Output "  $OS $($Params['Algorithm']): $($Params[$Algorithm][$OS].Hash)"
+  Write-Output "Created $OS $($Params['Algorithm']): $($Params['Hash'][$OS].Hash)"
 
-  Write-Output "Getting MSI ProductCode"
-  $Params['ProductCode'][$OS] = $(.\Get-MSIFileInformation.ps1 -Path $LocalFile[$OS] -Property ProductCode)[3]
-  Write-Output "  $OS ProductCode: $($Params['ProductCode'][$OS])"
+  $Params['ProductCode'][$OS] = $(.\Get-MSIFileInformation.ps1 -Path $Params['LocalFile'][$OS] -Property ProductCode)[3]
+  Write-Output "Found $OS ProductCode: $($Params['ProductCode'][$OS])"
+
+  Start-Process "msiexec" -ArgumentList "/a $($Params['LocalFile'][$OS]) /qn TARGETDIR=$PSScriptRoot\temp\$OS" -Wait
+
 }
 
-New-Item `
-  -ItemType Directory `
-  -Path "$PSScriptRoot\output\tools\" `
-  -ErrorAction SilentlyContinue | Out-Null
+$Comparison = $(Get-ChildItem -Recurse $PSScriptRoot\temp\ | Where-Object {$_.Name -like "license.txt"})
+if (Compare-Object $Comparison[0].FullName $Comparison[1].FullName){
+  Copy-Item $Comparison[0].FullName -Destination "$PSScriptRoot\output"
+  Write-Output "Copied output\License.txt"
+}
+else{
+  Write-Warning "License.txt do not match between MSI"
+  exit 5
+}
+  
 
 $(Get-Content -Path "$PSScriptRoot\templates\$Package.nuspec") `
   -replace '##VERSION##', $Version `
@@ -60,8 +71,8 @@ $(Get-Content -Path "$PSScriptRoot\templates\$Package.nuspec") `
 Write-Output 'Created output\$Package.nuspec'
 
 $(Get-Content -Path "$PSScriptRoot\templates\chocolateyInstall.ps1") `
-  -replace '##URLx86##', $URL['x86'] `
-  -replace '##URLx64##', $URL['x64'] `
+  -replace '##URLx86##', $Params['URL']['x86'] `
+  -replace '##URLx64##', $Params['URL']['x64'] `
   -replace '##SHA256x86##', $Params['Hash']['x86'].Hash `
   -replace '##SHA256x64##', $Params['Hash']['x64'].Hash | `
   Out-File "$PSScriptRoot\output\tools\chocolateyInstall.ps1"

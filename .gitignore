@@ -3,5 +3,5 @@
 
 *.nupkg
 .DS_Store
-binaries/
+temp/
 output/
