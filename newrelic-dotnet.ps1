@@ -1,74 +1,87 @@
-﻿Try{ 
-  [xml]$Value = $(Invoke-WebRequest -Uri 'https://docs.newrelic.com/docs/release-notes/agent-release-notes/net-release-notes/feed' -ErrorAction Stop).Content 
+﻿$Params = @{
+  Algorithm = 'SHA256';
+  URL = @{};
+  LocalFile = @{};
+  Hash = @{};
+  ProductCode = @{};
+}
+$Package     = 'newrelic-dotnet'
+$RSSfeed     = 'https://docs.newrelic.com/docs/release-notes/agent-release-notes/net-release-notes/feed'
+$PackageName = 'NewRelicAgent_${OS}_${Version}.msi'
+$PackageURL  = "https://download.newrelic.com/dot_net_agent/release/$PackageName"
+ 
+
+Try{ 
+  [xml]$RSSResults = $(Invoke-WebRequest -Uri $RSSfeed -ErrorAction Stop).Content 
 }
 Catch [System.Exception]{ 
   $WebReqErr = $error[0] | Select-Object * | Format-List -Force 
   Write-Error "An error occurred while attempting to connect to the requested site.  The error was $WebReqErr.Exception" 
 }
 
-$Version = $Value.rss.channel.Item[0].title -replace '(.*\s)(\d.+)','$2'
-$ReleaseNotes = $Value.rss.channel.Item[0].link
-Write-Output = "Release Notes: $ReleaseNotes"
+$Version = $RSSResults.rss.channel.Item[0].title -replace '(.*\s)(\d.+)','$2'
+$ReleaseNotes = $RSSResults.rss.channel.Item[0].link
 
-Write-Output "Release Version: $Version"
-$LocalFile_x86 = "$PSScriptRoot\binaries\NewRelicAgent_x86_$Version.msi"
-$LocalFile_x64 = "$PSScriptRoot\binaries\NewRelicAgent_x64_$Version.msi"
-New-Item -ItemType Directory -Path "$PSScriptRoot\binaries" -ErrorAction SilentlyContinue | Out-Null
+Write-Output `
+  $Package `
+  "Release Version: $Version" `
+  "Release Notes: $ReleaseNotes"
 
+New-Item `
+  -ItemType Directory `
+  -Path "$PSScriptRoot\output\binaries","$PSScriptRoot\output\tools\" `
+  -ErrorAction SilentlyContinue | Out-Null
+  
+foreach ($OS in 'x86','x64') {
+  $Params['URL'][$OS] = $ExecutionContext.InvokeCommand.ExpandString($PackageURL)
+  $Params['LocalFile'][$OS] = "$PSScriptRoot\output\binaries\$($ExecutionContext.InvokeCommand.ExpandString($PackageName))"
+  
+  Invoke-WebRequest `
+   -Uri $Params['URL'][$OS] `
+   -OutFile $Params['LocalFile'][$OS]
+  Write-Output "Downloaded $OS from $($Params['URL'][$OS])"
+   
+  $Params['Hash'][$OS] = Get-FileHash `
+    -Path $Params['LocalFile'][$OS] `
+    -Algorithm $Params['Algorithm']
+  Write-Output "Created $OS $($Params['Algorithm']): $($Params['Hash'][$OS].Hash)"
 
-$URL_x86 = "https://download.newrelic.com/dot_net_agent/release/NewRelicAgent_x86_$Version.msi"
-Invoke-WebRequest `
- -Uri $URL_x86 `
- -OutFile $LocalFile_x86
-Write-Output "Downloaded x86"
-Write-Output "  x86 URL: $URL_x86"
+  $Params['ProductCode'][$OS] = $(.\Get-MSIFileInformation.ps1 -Path $Params['LocalFile'][$OS] -Property ProductCode)[3]
+  Write-Output "Found $OS ProductCode: $($Params['ProductCode'][$OS])"
 
-$URL_x64 = "https://download.newrelic.com/dot_net_agent/release/NewRelicAgent_x64_$Version.msi"
-Invoke-WebRequest `
- -Uri  $URL_x64 `
- -OutFile $LocalFile_x64
-Write-Output "Downloaded x64"
-Write-Output "  x64 URL: $URL_x64"
+  Start-Process "msiexec" -ArgumentList "/a $($Params['LocalFile'][$OS]) /qn TARGETDIR=$PSScriptRoot\temp\$OS" -Wait
 
+}
 
-Write-Output "Creating SHA256"
-$LocalSHA256_x64 = Get-FileHash `
-  -Path $LocalFile_x64 `
-  -Algorithm SHA256
-Write-Output "  x64 SHA256: $($LocalSHA256_x64.Hash)"
+$Comparison = $(Get-ChildItem -Recurse $PSScriptRoot\temp\ | Where-Object {$_.Name -like "license.txt"})
+if (Compare-Object $Comparison[0].FullName $Comparison[1].FullName){
+  Copy-Item $Comparison[0].FullName -Destination "$PSScriptRoot\output"
+  Write-Output "Copied output\License.txt"
+}
+else{
+  Write-Warning "License.txt do not match between MSI"
+  exit 5
+}
+  
 
-$LocalSHA256_x86 = Get-FileHash `
-  -Path $LocalFile_x86 `
-  -Algorithm SHA256
-Write-Output "  x86 SHA256: $($LocalSHA256_x86.Hash)"
-
-Write-Output "Getting MSI ProductCode"
-$LocalProductCode_x64 = $(.\Get-MSIFileInformation.ps1 -Path $LocalFile_x64 -Property ProductCode)[3]
-Write-Output "  x64 ProductCode: $LocalProductCode_x64"
-
-$LocalProductCode_x86 = $(.\Get-MSIFileInformation.ps1 -Path $LocalFile_x86 -Property ProductCode)[3]
-Write-Output "  x86 ProductCode: $LocalProductCode_x86"
-
-New-Item -ItemType Directory -Path "$PSScriptRoot\output\tools\" -ErrorAction SilentlyContinue | Out-Null
-
-$(Get-Content -Path "$PSScriptRoot\templates\newrelic-dotnet.nuspec") `
+$(Get-Content -Path "$PSScriptRoot\templates\$Package.nuspec") `
   -replace '##VERSION##', $Version `
   -replace '##RELEASENOTES##', $ReleaseNotes | `
-  Out-File "$PSScriptRoot\output\newrelic-dotnet.nuspec"
-Write-Output 'Created output\newrelic-dotnet.nuspec'
+  Out-File "$PSScriptRoot\output\$Package.nuspec"
+Write-Output 'Created output\$Package.nuspec'
 
 $(Get-Content -Path "$PSScriptRoot\templates\chocolateyInstall.ps1") `
-  -replace '##URLx86##', $URL_x86 `
-  -replace '##URLx64##', $URL_x64 `
-  -replace '##SHA256x86##', $LocalSHA256_x86.Hash `
-  -replace '##SHA256x64##', $LocalSHA256_x64.Hash | `
+  -replace '##FILEx86##', "NewRelicAgent_x86_${Version}.msi" `
+  -replace '##FILEx64##', "NewRelicAgent_x64_${Version}.msi" `
+  -replace '##SHA256x86##', $Params['Hash']['x86'].Hash `
+  -replace '##SHA256x64##', $Params['Hash']['x64'].Hash | `
   Out-File "$PSScriptRoot\output\tools\chocolateyInstall.ps1"
 Write-Output 'Created output\tools\chocolateyInstall.ps1'
 
 $(Get-Content -Path "$PSScriptRoot\templates\chocolateyUninstall.ps1") `
-  -replace '##PRODUCTCODEx86##', $LocalProductCode_x86 `
-  -replace '##PRODUCTCODEx64##', $LocalProductCode_x64 | `
+  -replace '##PRODUCTCODEx86##', $Params['ProductCode']['x86'] `
+  -replace '##PRODUCTCODEx64##', $Params['ProductCode']['x64'] | `
   Out-File "$PSScriptRoot\output\tools\chocolateyUninstall.ps1"
 Write-Output 'Created output\tools\chocolateyUninstall.ps1'
 
-Set-Item -Path ENV:NUPKG -Value "newrelic-dotnet.$Version.nupkg"
+Set-Item -Path ENV:NUPKG -Value "$Package.$Version.nupkg"
