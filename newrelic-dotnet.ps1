@@ -71,8 +71,8 @@ $(Get-Content -Path "$PSScriptRoot\templates\$Package.nuspec") `
 Write-Output 'Created output\$Package.nuspec'
 
 $(Get-Content -Path "$PSScriptRoot\templates\chocolateyInstall.ps1") `
-  -replace '##URLx86##', $Params['URL']['x86'] `
-  -replace '##URLx64##', $Params['URL']['x64'] `
+  -replace '##FILEx86##', "NewRelicAgent_x86_${Version}.msi" `
+  -replace '##FILEx64##', "NewRelicAgent_x64_${Version}.msi" `
   -replace '##SHA256x86##', $Params['Hash']['x86'].Hash `
   -replace '##SHA256x64##', $Params['Hash']['x64'].Hash | `
   Out-File "$PSScriptRoot\output\tools\chocolateyInstall.ps1"
