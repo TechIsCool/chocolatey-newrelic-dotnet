@@ -3,7 +3,7 @@ $local_nupkg = $env:NUPKG
 $published_nupkg = "$($published_version[0]).$($published_version[1]).nupkg"
 
 if( $env:NUPKG -ne $published_nupkg ){
-  choco apiKey -k $env:TOKEN -source https://chocolatey.org/
+  choco apiKey -k $env:TOKEN -source https://push.chocolatey.org/
   choco push $env:NUPKG
 }
 else {
