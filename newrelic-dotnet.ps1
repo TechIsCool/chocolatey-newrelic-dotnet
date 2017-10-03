@@ -12,6 +12,7 @@ $PackageURL  = "https://download.newrelic.com/dot_net_agent/release/$PackageName
  
 
 Try{ 
+  [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
   [xml]$RSSResults = $(Invoke-WebRequest -Uri $RSSfeed -ErrorAction Stop).Content 
 }
 Catch [System.Exception]{ 
