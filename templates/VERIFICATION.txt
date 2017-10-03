@@ -1,0 +1,7 @@
+VERIFICATION
+Verification is intended to assist the Chocolatey moderators and community
+in verifying that this package's contents are trustworthy.
+ 
+This package is published by NewRelic itself. The binaries are 
+identical to the published by NewRelic. Which can be seen at
+https://download.newrelic.com/dot_net_agent/release/

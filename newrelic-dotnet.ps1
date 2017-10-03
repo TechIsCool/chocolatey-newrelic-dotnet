@@ -85,4 +85,7 @@ $(Get-Content -Path "$PSScriptRoot\templates\chocolateyUninstall.ps1") `
   Out-File "$PSScriptRoot\output\tools\chocolateyUninstall.ps1"
 Write-Output 'Created output\tools\chocolateyUninstall.ps1'
 
+Copy-Item -Path "$PSScriptRoot\templates\VERIFICATION.txt" `
+  -Destination "$PSScriptRoot\output\tools\VERIFICATION.txt"
+
 Set-Item -Path ENV:NUPKG -Value "$Package.$Version.nupkg"
