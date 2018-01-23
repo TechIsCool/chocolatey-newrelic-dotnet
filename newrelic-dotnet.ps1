@@ -8,7 +8,7 @@
 $Package     = 'newrelic-dotnet'
 $RSSfeed     = 'https://docs.newrelic.com/docs/release-notes/agent-release-notes/net-release-notes/feed'
 $PackageName = 'NewRelicAgent_${OS}_${Version}.msi'
-$PackageURL  = "https://download.newrelic.com/dot_net_agent/release/$PackageName"
+$PackageURL  = "https://download.newrelic.com/dot_net_agent/latest_release/$PackageName"
  
 
 Try{ 
