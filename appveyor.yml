@@ -13,9 +13,9 @@ build_script:
       choco pack output/newrelic-dotnet.nuspec
 
 test_script:
-  - ps: cinst newrelic-dotnet -fdvy -source "$pwd;http://chocolatey.org/api/v2/"
+  - ps: cinst newrelic-dotnet  --version $env:NUPKG_VERSION -fdvy -source "$pwd;http://chocolatey.org/api/v2/"
   - ps: cuninst -fdvy newrelic-dotnet
-  - ps: cinst newrelic-dotnet -fdvy --x86 -source "$pwd;http://chocolatey.org/api/v2/"
+  - ps: cinst newrelic-dotnet --version $env:NUPKG_VERSION -fdvy --x86 -source "$pwd;http://chocolatey.org/api/v2/"
   - ps: cuninst -fdvy newrelic-dotnet 
 
 deploy_script:

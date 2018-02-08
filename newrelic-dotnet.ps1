@@ -96,4 +96,5 @@ Write-Output 'Created output\tools\chocolateyUninstall.ps1'
 Copy-Item -Path "$PSScriptRoot\templates\VERIFICATION.txt" `
   -Destination "$PSScriptRoot\output\tools\VERIFICATION.txt"
 
+Set-Item -Path ENV:NUPKG_VERSION -Value "$Version"  
 Set-Item -Path ENV:NUPKG -Value "$Package.$Version.nupkg"
