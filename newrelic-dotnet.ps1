@@ -24,7 +24,7 @@ $ReleaseNotes = $RSSResults.rss.channel.Item[0].link
 
 switch ($Version.SubString(0,1)){
   6 { $PackageURL  = "http://download.newrelic.com/dot_net_agent/6.x_release/$PackageName" }
-  7 { $PackageURL  = "https://download.newrelic.com/dot_net_agent/latest_release/$PackageName" }
+  {$_ -ge 7} { $PackageURL  = "https://download.newrelic.com/dot_net_agent/latest_release/$PackageName" }
 }
 
 if($Version.StartsWith('6')){
