@@ -7,7 +7,7 @@
 }
 $Package     = 'newrelic-dotnet'
 $RSSfeed     = 'https://docs.newrelic.com/docs/release-notes/agent-release-notes/net-release-notes/feed'
-$PackageName = 'NewRelicAgent_${OS}_${Version}.msi'
+
  
 
 Try{ 
@@ -23,8 +23,14 @@ $Version = $RSSResults.rss.channel.Item[0].title -replace '(.*\s)(\d.+)','$2'
 $ReleaseNotes = $RSSResults.rss.channel.Item[0].link
 
 switch ($Version.SubString(0,1)){
-  6 { $PackageURL  = "http://download.newrelic.com/dot_net_agent/6.x_release/$PackageName" }
-  {$_ -ge 7} { $PackageURL  = "https://download.newrelic.com/dot_net_agent/latest_release/$PackageName" }
+  6 {
+    $PackageName = 'NewRelicAgent_${OS}_${Version}.msi'
+    $PackageURL  = "http://download.newrelic.com/dot_net_agent/6.x_release/$PackageName"
+  }
+  {$_ -ge 7} {
+    $PackageName = 'newrelic-agent-win-${OS}-${Version}.msi'
+    $PackageURL  = "https://download.newrelic.com/dot_net_agent/latest_release/$PackageName" 
+  }
 }
 
 if($Version.StartsWith('6')){
