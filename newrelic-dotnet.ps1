@@ -86,8 +86,8 @@ $(Get-Content -Path "$PSScriptRoot\templates\$Package.nuspec") `
 Write-Output 'Created output\$Package.nuspec'
 
 $(Get-Content -Path "$PSScriptRoot\templates\chocolateyInstall.ps1") `
-  -replace '##FILEx86##', "NewRelicAgent_x86_${Version}.msi" `
-  -replace '##FILEx64##', "NewRelicAgent_x64_${Version}.msi" `
+  -replace '##FILEx86##', "$(& {$OS='x86'; $($ExecutionContext.InvokeCommand.ExpandString($PackageName))})" `
+  -replace '##FILEx64##', "$(& {$OS='x64'; $($ExecutionContext.InvokeCommand.ExpandString($PackageName))})" `
   -replace '##SHA256x86##', $Params['Hash']['x86'].Hash `
   -replace '##SHA256x64##', $Params['Hash']['x64'].Hash | `
   Out-File "$PSScriptRoot\output\tools\chocolateyInstall.ps1"
