@@ -6,7 +6,7 @@
   ProductCode = @{};
 }
 $Package     = 'newrelic-dotnet'
-$RSSfeed     = 'https://docs.newrelic.com/docs/release-notes/agent-release-notes/net-release-notes/feed'
+$RSSfeed     = 'https://docs.newrelic.com/docs/release-notes/agent-release-notes/net-release-notes/feed.xml'
 
  
 
