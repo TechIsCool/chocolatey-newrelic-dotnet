@@ -19,8 +19,9 @@ Catch [System.Exception]{
   Write-Error "An error occurred while attempting to connect to the requested site.  The error was $WebReqErr.Exception" 
 }
 
-$Version = $RSSResults.rss.channel.Item[0].title.InnerText -replace '(.*\s)(\d.+)','$2'
-$ReleaseNotes = $RSSResults.rss.channel.Item[0].link
+$RSSSorted = $RSSResults.rss.channel | Sort-Object -property @{e={$_.pubDate}}
+$Version = $RSSSorted.Item[0].title.InnerText -replace '(.*\s)(\d.+)','$2'
+$ReleaseNotes = $Sorted.Item[0].link
 
 switch ($Version.SubString(0,1)){
   6 {
