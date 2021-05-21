@@ -8,34 +8,28 @@
 $Package     = 'newrelic-dotnet'
 $RSSfeed     = 'https://docs.newrelic.com/docs/release-notes/agent-release-notes/net-release-notes/feed.xml'
 
- 
-
 Try{ 
   [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-  [xml]$RSSResults = $(Invoke-WebRequest -Uri $RSSfeed -ErrorAction Stop).Content 
+  [xml]$RSSResults = $(Invoke-WebRequest -Uri $RSSfeed -ErrorAction Stop).Content
 }
 Catch [System.Exception]{ 
   $WebReqErr = $error[0] | Select-Object * | Format-List -Force 
-  Write-Error "An error occurred while attempting to connect to the requested site.  The error was $WebReqErr.Exception" 
+  Write-Error "An error occurred while attempting to connect to the requested site.  The error was $WebReqErr.Exception"
 }
 
-$RSSSorted = $RSSResults.rss.channel | Sort-Object -property @{e={$_.pubDate}}
-$Version = $RSSSorted.Item[0].title.InnerText -replace '(.*\s)(\d.+)','$2'
-$ReleaseNotes = $Sorted.Item[0].link
+$Sorted = $RSSResults.rss.channel.item | Sort-Object -Desc -Property @{e={$_.pubDate -as [datetime]}}
+$Version = $Sorted[0].title.InnerText -replace '(.*\s)(\d.+)','$2'
+$ReleaseNotes = $Sorted[0].link
 
 switch ($Version.SubString(0,1)){
   6 {
     $PackageName = 'NewRelicAgent_${OS}_${Version}.msi'
-    $PackageURL  = "http://download.newrelic.com/dot_net_agent/6.x_release/$PackageName"
+    $PackageURL  = "https://download.newrelic.com/dot_net_agent/6.x_release/$PackageName"
   }
   {$_ -ge 7} {
     $PackageName = 'newrelic-agent-win-${OS}-${Version}.msi'
     $PackageURL  = "https://download.newrelic.com/dot_net_agent/latest_release/$PackageName" 
   }
-}
-
-if($Version.StartsWith('6')){
-  
 }
 
 Write-Output `
@@ -47,7 +41,7 @@ New-Item `
   -ItemType Directory `
   -Path "$PSScriptRoot\output\binaries","$PSScriptRoot\output\tools\" `
   -ErrorAction SilentlyContinue | Out-Null
-  
+
 foreach ($OS in 'x86','x64') {
   $Params['URL'][$OS] = $ExecutionContext.InvokeCommand.ExpandString($PackageURL)
   $Params['LocalFile'][$OS] = "$PSScriptRoot\output\binaries\$($ExecutionContext.InvokeCommand.ExpandString($PackageName))"
@@ -61,12 +55,12 @@ foreach ($OS in 'x86','x64') {
     -Path $Params['LocalFile'][$OS] `
     -Algorithm $Params['Algorithm']
   Write-Output "Created $OS $($Params['Algorithm']): $($Params['Hash'][$OS].Hash)"
+  
 
   $Params['ProductCode'][$OS] = $(.\Get-MSIFileInformation.ps1 -Path $Params['LocalFile'][$OS] -Property ProductCode)[3]
   Write-Output "Found $OS ProductCode: $($Params['ProductCode'][$OS])"
 
   Start-Process "msiexec" -ArgumentList "/a $($Params['LocalFile'][$OS]) /qn TARGETDIR=$PSScriptRoot\temp\$OS" -Wait
-
 }
 
 $Comparison = $(Get-ChildItem -Recurse $PSScriptRoot\temp\ | Where-Object {$_.Name -like "license.txt"})
@@ -78,7 +72,6 @@ else{
   Write-Warning "License.txt do not match between MSI"
   exit 5
 }
-  
 
 $(Get-Content -Path "$PSScriptRoot\templates\$Package.nuspec") `
   -replace '##VERSION##', $Version `
