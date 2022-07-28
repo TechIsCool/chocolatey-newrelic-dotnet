@@ -21,7 +21,7 @@ $Sorted = $RSSResults.rss.channel.item | Sort-Object -Desc -Property @{e={$_.pub
 $Version = $Sorted[0].title.InnerText -replace '(.*\s)(\d.+)','$2'
 $ReleaseNotes = $Sorted[0].link
 
-switch ($Version.SubString(0,1)){
+switch ($Version.split('.')[0]){
   6 {
     $PackageName = 'NewRelicAgent_${OS}_${Version}.msi'
     $PackageURL  = "https://download.newrelic.com/dot_net_agent/6.x_release/$PackageName"
@@ -30,12 +30,21 @@ switch ($Version.SubString(0,1)){
     $PackageName = 'newrelic-agent-win-${OS}-${Version}.msi'
     $PackageURL  = "https://download.newrelic.com/dot_net_agent/latest_release/$PackageName" 
   }
+  {$_ -ge 10} {
+    $PackageName = 'NewRelicDotNetAgent_${Version}_${OS}.msi'
+    $PackageURL  = "https://download.newrelic.com/dot_net_agent/latest_release/$PackageName" 
+  }
+  default {
+    Write-Error "An error occurred while attempting to determine the Major Version of '$_' from the full Version '${Version}'. Please update the case statement."
+  }
 }
 
 Write-Output `
   $Package `
   "Release Version: $Version" `
-  "Release Notes: $ReleaseNotes"
+  "Release Notes: $ReleaseNotes" `
+  "Release Package Name: $PackageName" `
+  "Release Package URL: $PackageURL"
 
 New-Item `
   -ItemType Directory `
