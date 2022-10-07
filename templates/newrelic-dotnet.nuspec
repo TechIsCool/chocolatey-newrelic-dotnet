@@ -9,7 +9,7 @@
     <licenseUrl>https://www.newrelic.com</licenseUrl>
     <projectUrl>https://www.newrelic.com</projectUrl>
     <packageSourceUrl>https://github.com/TechIsCool/chocolatey-newrelic-dotnet</packageSourceUrl>
-    <iconUrlhttps://newrelic.com/themes/custom/erno/assets/mediakit/new_relic_logo_horizontal.png</iconUrl>
+    <iconUrl>https://newrelic.com/themes/custom/erno/assets/mediakit/new_relic_logo_horizontal.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>New Relic .NET Agent that allows you to monitor your .NET application. Package has following parameters:
 
