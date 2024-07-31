@@ -18,7 +18,7 @@ Catch [System.Exception]{
 }
 
 $Sorted = $RSSResults.rss.channel.item | Sort-Object -Desc -Property @{e={$_.pubDate -as [datetime]}}
-$Version = $Sorted[0].title.InnerText -replace '(.*\s)(\d.+)','$2'
+$Version = $Sorted[0].title.InnerText -replace '(.*\bv)(\d.+)', '$2'
 $ReleaseNotes = $Sorted[0].link
 
 switch ($Version.split('.')[0]){
